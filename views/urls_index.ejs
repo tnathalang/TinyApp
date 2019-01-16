@@ -1,0 +1,24 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Tiny App</title>
+  </head>
+  <body>
+    
+      <% include partials/_header %>
+
+
+    <ul>
+      <% for (const urlKey in urls) { %>
+      <li><%= urlKey %> - <%= urls[urlKey] %></li>
+      <% }; %>
+    </ul>
+    <a href = "/urls/new" > Create a new link </a>
+    <form method="POST" action="/urls/9sm5xK/delete">...</form>
+  </body>
+</html>
