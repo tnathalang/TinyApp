@@ -66,6 +66,11 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  // let longURL = ...
+  res.redirect(longURL);
+});
+
 app.post("/urls/:id/delete", (req, res) => {
   const removedURL = deleteURL();
 
