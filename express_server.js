@@ -24,9 +24,6 @@ function generateRandomString() {
 
   return id;
 }
-function deleteURL() {
-  delete urlDatabase.body.shortURL;
-}
 
 app.post("/urls", (req, res) => {
   const randomId = generateRandomString();
@@ -72,8 +69,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const removedURL = deleteURL();
-
+  delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
 
