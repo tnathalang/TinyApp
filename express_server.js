@@ -9,7 +9,7 @@ var methodOverride = require("method-override");
 app.set("view engine", "ejs");
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(methodOverride("X-HTTP-Method-Override"));
+app.use(methodOverride("_method"));
 
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
@@ -109,8 +109,9 @@ app.post("/login", (req, res) => {
 });
 
 app.delete("/logout", (req, res) => {
-  res.cookie("userId", null);
-  res.redirect("/urls");
+  console.log(req.cookies["cookieName"]);
+  res.clearCookie("cookieName");
+  res.redirect("/login");
 });
 
 app.get("/", (req, res) => {

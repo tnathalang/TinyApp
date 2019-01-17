@@ -5,7 +5,10 @@
    
     <% if(username !== undefined){ %>
     <h3> Hello <%= username %></h3>
-
+    <h4><form method= "POST" action ="/logout?_method=DELETE">
+    <input type="submit" value="LogOut">
+    </form>
+    </h4>
    <% } else{ %>  
         <form method="POST" action="/login">
         <input name="username">
