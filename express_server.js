@@ -25,10 +25,22 @@ function generateRandomString() {
   return id;
 }
 
+function checHTTP(longURL) {
+  let start1 = longURL.slice(0, 7);
+  let start2 = longURL.slice(0, 8);
+
+  if (start1 !== "http://" && start2 !== "https://") {
+    newURL = "//" + longURL;
+    return newURL;
+  } else {
+    return longURL;
+  }
+}
+
 app.post("/urls", (req, res) => {
   const randomId = generateRandomString();
 
-  urlDatabase[randomId] = req.body.longURL;
+  urlDatabase[randomId] = "http://www." + req.body.longURL;
   res.redirect("/");
 });
 
@@ -70,6 +82,11 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
+  res.redirect("/urls");
+});
+
+app.post("/urls/:id/update", (req, res) => {
+  urlDatabase[req.params.id] = checHTTP(req.body.longURL);
   res.redirect("/urls");
 });
 

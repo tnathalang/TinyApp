@@ -15,10 +15,18 @@
 
     <ul>
       <% for (const urlKey in urls) { %>
-      <li><%= urlKey %> - <%= urls[urlKey] %></li>
+      <li>
+      <a><%= urlKey %></a> - 
+      <a href="<%= urls[urlKey]%>"> <%= urls[urlKey] %> </a>
+        <a href="/urls/<%= urlKey %>">
+          <button type="submit" value="Update">Update</button>
+        </a>
+        <form method="POST" action="/urls/<%= urlKey %>/delete"> 
+          <button type="submit" value="Delete">Delete</button>
+        </form>
+      </li>
       <% }; %>
     </ul>
-    <a href = "/urls/new" > Create a new link </a>
-    <form method="POST" action="/urls/9sm5xK/delete">...</form>
+    <a href = "/urls/new" > <h1>Create a new link</h1> </a>
   </body>
 </html>
