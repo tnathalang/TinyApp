@@ -3,12 +3,29 @@ const app = express();
 const PORT = 8080; // default port 8080
 const uuidv1 = require("uuid/v1");
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({ extended: true }));
+const cookieParser = require("cookie-parser");
+var methodOverride = require("method-override");
+
 app.set("view engine", "ejs");
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(methodOverride("X-HTTP-Method-Override"));
 
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};
+const usersDb = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
 };
 
 function generateRandomString() {
@@ -26,6 +43,7 @@ function generateRandomString() {
 }
 
 function checHTTP(longURL) {
+  // a function to check if a version puts http or https inside the update url
   let start1 = longURL.slice(0, 7);
   let start2 = longURL.slice(0, 8);
 
@@ -36,12 +54,60 @@ function checHTTP(longURL) {
     return longURL;
   }
 }
+//checkHTTP function was built and  help by Francis
+// authentication function for log in usage not implemented
+// const authenticateUser = (email, password) => {
+//   //loop over the userDb object
+//   // if the emails and passwords match, return the userId
+//   // if not match is found, return false
+
+//   for (const userId in usersDb) {
+//     const user = usersDb[userId];
+//     if (user.email === email && user.password === password) {
+//       return user.id;
+//     }
+//   }
+//   return false;
+// };
 
 app.post("/urls", (req, res) => {
   const randomId = generateRandomString();
 
   urlDatabase[randomId] = "http://www." + req.body.longURL;
   res.redirect("/");
+});
+
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
+app.post("/login", (req, res) => {
+  // extracting email and password from the form
+  // const email = req.body.email;
+  // const password = req.body.password;
+
+  const { email, password } = req.body;
+
+  // authenticate the user -> check if a user exists with this email and password
+  const userId = authenticateUser(email, password);
+
+  if (userId) {
+    // if user is authenticated -> login
+    // login means setting the cookie for that user
+    // redirect to "/urls"
+    res.cookie("userId", userId);
+    res.redirect("/urls");
+  } else {
+    // if the user is not found
+    // error message "Wrong credentials"
+    // redirect to login
+    res.redirect("/login");
+  }
+});
+
+app.delete("/logout", (req, res) => {
+  res.cookie("userId", null);
+  res.redirect("/urls");
 });
 
 app.get("/", (req, res) => {
@@ -59,7 +125,9 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let userId = req.cookies.userId;
+  let currentUser = usersDb[userId];
+  let templateVars = { urls: urlDatabase, currentUser: currentUser };
   res.render("urls_index", templateVars);
 });
 
