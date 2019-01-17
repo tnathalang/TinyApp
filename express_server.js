@@ -82,27 +82,30 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
+  res.cookie("cookieName", req.body.username);
+
   // extracting email and password from the form
   // const email = req.body.email;
   // const password = req.body.password;
 
-  const { email, password } = req.body;
+  // const { email, password } = req.body;
 
-  // authenticate the user -> check if a user exists with this email and password
-  const userId = authenticateUser(email, password);
+  // // authenticate the user -> check if a user exists with this email and password
+  // const userId = authenticateUser(email, password);
 
-  if (userId) {
-    // if user is authenticated -> login
-    // login means setting the cookie for that user
-    // redirect to "/urls"
-    res.cookie("userId", userId);
-    res.redirect("/urls");
-  } else {
-    // if the user is not found
-    // error message "Wrong credentials"
-    // redirect to login
-    res.redirect("/login");
-  }
+  // if (userId) {
+  //   // if user is authenticated -> login
+  //   // login means setting the cookie for that user
+  //   // redirect to "/urls"
+  //   res.cookie("userId", userId);
+  //   res.redirect("/urls");
+  // } else {
+  //   // if the user is not found
+  //   // error message "Wrong credentials"
+  //   // redirect to login
+  //   res.redirect("/login");
+  // }
+  res.redirect("/urls");
 });
 
 app.delete("/logout", (req, res) => {
@@ -111,7 +114,7 @@ app.delete("/logout", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
   res.render("urls_index", templateVars);
 });
 
@@ -127,7 +130,13 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   let userId = req.cookies.userId;
   let currentUser = usersDb[userId];
-  let templateVars = { urls: urlDatabase, currentUser: currentUser };
+  let username = req.cookies["cookieName"];
+  let templateVars = {
+    urls: urlDatabase,
+    currentUser: currentUser,
+    username: username
+  };
+  console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 

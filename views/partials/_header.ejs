@@ -1,10 +1,15 @@
+<header class ="header">
+    <h1>Tiny APP</h1>
+</header>
 
+   
+    <% if(username !== undefined){ %>
+    <h3> Hello <%= username %></h3>
 
-
-    <header>
-Tiny APP
-    </header>
-
-    
-
+   <% } else{ %>  
+        <form method="POST" action="/login">
+        <input name="username">
+            <button type="submit" value="SignIn">Sign In</button>
+    </form>
+    <% } %>
 
