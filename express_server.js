@@ -77,40 +77,65 @@ app.post("/urls", (req, res) => {
   res.redirect("/");
 });
 
+checkForEmpty = str => {
+  return str === undefined || str === null || str === "";
+};
+
+app.post("/users", (req, res) => {
+  const { email, password } = req.body;
+
+  if (checkForEmpty(email) || checkForEmpty(password)) {
+    res.status(404).send("Not found");
+    return;
+  }
+  // authenticate the user -> check if a user exists with this email and password
+  const userId = createUser(email, password);
+
+  if (userId) {
+    // if user is authenticated -> login
+    // login means setting the cookie for that user
+    // redirect to "/urls"
+    res.cookie("userId", userId);
+    res.redirect("/urls");
+  } else {
+    // if the user is not found
+    // error message "Wrong credentials"
+    // redirect to login
+
+    res.redirect("/register");
+  }
+});
+
+app.get("/register", (req, res) => {
+  templateVars = { currentUser: null, username: req.cookies["username"] };
+  res.render("register", templateVars);
+});
+
+app.post("/users", (req, res) => {
+  const randomString = generateRandomString();
+  console.log(req.body);
+  usersDb[randomString] = {
+    id: randomString,
+    email: req.body.email,
+    password: req.body.password
+  };
+
+  res.cookie("username", usersDb[randomString].id);
+  res.redirect("/urls");
+});
+
 app.get("/login", (req, res) => {
+  let templateVars = { username: req.cookies["username"] };
   res.render("login");
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("cookieName", req.body.username);
-
-  // extracting email and password from the form
-  // const email = req.body.email;
-  // const password = req.body.password;
-
-  // const { email, password } = req.body;
-
-  // // authenticate the user -> check if a user exists with this email and password
-  // const userId = authenticateUser(email, password);
-
-  // if (userId) {
-  //   // if user is authenticated -> login
-  //   // login means setting the cookie for that user
-  //   // redirect to "/urls"
-  //   res.cookie("userId", userId);
-  //   res.redirect("/urls");
-  // } else {
-  //   // if the user is not found
-  //   // error message "Wrong credentials"
-  //   // redirect to login
-  //   res.redirect("/login");
-  // }
+  res.cookie("username", req.body.username);
   res.redirect("/urls");
 });
 
 app.delete("/logout", (req, res) => {
-  console.log(req.cookies["cookieName"]);
-  res.clearCookie("cookieName");
+  res.clearCookie("username");
   res.redirect("/login");
 });
 
@@ -131,7 +156,7 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   let userId = req.cookies.userId;
   let currentUser = usersDb[userId];
-  let username = req.cookies["cookieName"];
+  let username = req.cookies["username"];
   let templateVars = {
     urls: urlDatabase,
     currentUser: currentUser,
@@ -140,23 +165,28 @@ app.get("/urls", (req, res) => {
   console.log(templateVars);
   res.render("urls_index", templateVars);
 });
-
+``;
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = { username: req.cookies["username"] };
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id]
+    longURL: urlDatabase[req.params.id],
+    username: req.cookies["username"]
   };
+  console.log("username: ", templateVars.username);
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  // let longURL = ...
+  let templateVars = { username: req.cookies };
   res.redirect(longURL);
 });
+
+app.post("/register", (req, res) => {});
 
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
