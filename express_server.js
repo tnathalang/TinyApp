@@ -55,6 +55,18 @@ function checHTTP(longURL) {
   }
 }
 //checkHTTP function was built and  help by Francis
+
+const createUser = (email, password) => {
+  const userId = generateRandomString();
+  const newUser = {
+    id: userId,
+    email: email,
+    password: password
+  };
+  usersDb[userId] = newUser;
+  return userId;
+};
+
 // authentication function for log in usage not implemented
 // const authenticateUser = (email, password) => {
 //   //loop over the userDb object
@@ -111,9 +123,12 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
-app.post("/users", (req, res) => {
-  const randomString = generateRandomString();
-  console.log(req.body);
+app.post("/register", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  const userId = createUser(email, password);
+
   usersDb[randomString] = {
     id: randomString,
     email: req.body.email,
