@@ -92,7 +92,7 @@ const emailExist = email => {
 //   return false;
 // };
 app.get("/login", (req, res) => {
-  let templateVars = { username: req.cookies["username"] };
+  let templateVars = { username: req.cookies["userId"] };
   res.render("login");
 });
 
@@ -125,17 +125,22 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/urls");
+  for (let userId in usersDb) {
+    if (usersDb[userId].email === req.body.email) {
+      res.cookie("userId", usersDb[userId].id);
+      res.redirect("/urls");
+    }
+  }
+  res.send("nothing found");
 });
 
 app.delete("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("userId");
   res.redirect("/login");
 });
 
 app.get("/", (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  let templateVars = { urls: urlDatabase, username: req.cookies["userId"] };
   res.render("urls_index", templateVars);
 });
 
@@ -169,9 +174,13 @@ app.get("/urls/new", (req, res) => {
   let templateVars = {
     urls: urlDatabase,
     currentUser: currentUser,
-    username: username
+    username: userId
   };
-  res.render("urls_new", templateVars);
+  if (userId) {
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -183,7 +192,7 @@ app.get("/urls/:id", (req, res) => {
     longURL: urlDatabase[req.params.id],
     urls: urlDatabase,
     currentUser: currentUser,
-    username: username
+    username: userId
   };
 
   res.render("urls_show", templateVars);
