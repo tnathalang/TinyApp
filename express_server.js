@@ -12,10 +12,6 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 
-const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
 const usersDb = {
   userRandomID: {
     id: "userRandomID",
@@ -27,6 +23,14 @@ const usersDb = {
     email: "user2@example.com",
     password: "dishwasher-funk"
   }
+};
+const urlDatabase = {
+  b2xVn2: {
+    userId: usersDb.userRandomID.id,
+    url: "http://www.lighthouselabs.ca"
+  },
+
+  "9sm5xK": { userId: usersDb.userRandomID.id, url: "http://www.google.com" }
 };
 
 function generateRandomString() {
@@ -98,8 +102,16 @@ app.get("/login", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const randomId = generateRandomString();
+  let userId = req.cookies["userId"];
+  let currentUser = usersDb[userId];
+  let username = currentUser ? currentUser.email : undefined;
+  let url = "http://www." + req.body.longURL;
 
-  urlDatabase[randomId] = "http://www." + req.body.longURL;
+  urlDatabase[randomId] = {
+    currentUser: currentUser,
+    url: url
+  };
+  console.log(url);
   res.redirect("/");
 });
 
@@ -126,12 +138,18 @@ app.post("/register", (req, res) => {
 
 app.post("/login", (req, res) => {
   for (let userId in usersDb) {
-    if (usersDb[userId].email === req.body.email) {
+    if (
+      usersDb[userId].email === req.body.email &&
+      usersDb[userId].password === req.body.password
+    ) {
       res.cookie("userId", usersDb[userId].id);
       res.redirect("/urls");
+      return;
     }
   }
-  res.send("nothing found");
+  res.send(
+    "User is not found or incorrect password, please register or check if you input your password correctly"
+  );
 });
 
 app.delete("/logout", (req, res) => {
@@ -140,7 +158,14 @@ app.delete("/logout", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies["userId"] };
+  let userId = req.cookies["userId"];
+  let currentUser = usersDb[userId];
+  let username = currentUser ? currentUser.email : undefined;
+  let templateVars = {
+    urls: urlDatabase,
+    currentUser: currentUser,
+    username: username
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -161,7 +186,7 @@ app.get("/urls", (req, res) => {
   let templateVars = {
     urls: urlDatabase,
     currentUser: currentUser,
-    username: username
+    username: currentUser.email
   };
 
   res.render("urls_index", templateVars);
@@ -174,7 +199,7 @@ app.get("/urls/new", (req, res) => {
   let templateVars = {
     urls: urlDatabase,
     currentUser: currentUser,
-    username: userId
+    username: username
   };
   if (userId) {
     res.render("urls_new", templateVars);
@@ -192,7 +217,7 @@ app.get("/urls/:id", (req, res) => {
     longURL: urlDatabase[req.params.id],
     urls: urlDatabase,
     currentUser: currentUser,
-    username: userId
+    username: currentUser.email
   };
 
   res.render("urls_show", templateVars);
