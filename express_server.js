@@ -26,11 +26,11 @@ const usersDb = {
 };
 const urlDatabase = {
   b2xVn2: {
-    userId: usersDb.userRandomID.id,
-    url: "http://www.lighthouselabs.ca"
+    userId: "userRandomID",
+    longUrl: "http://www.lighthouselabs.ca"
   },
 
-  "9sm5xK": { userId: usersDb.userRandomID.id, url: "http://www.google.com" }
+  "9sm5xK": { userId: "userRandomID", longUrl: "http://www.google.com" }
 };
 
 function generateRandomString() {
@@ -47,16 +47,16 @@ function generateRandomString() {
   return id;
 }
 
-function checHTTP(longURL) {
-  // a function to check if a version puts http or https inside the update url
-  let start1 = longURL.slice(0, 7);
-  let start2 = longURL.slice(0, 8);
+function checHTTP(longUrl) {
+  // a function to check if a version puts http or https inside the update longUrl
+  let start1 = longUrl.slice(0, 7);
+  let start2 = longUrl.slice(0, 8);
 
   if (start1 !== "http://" && start2 !== "https://") {
-    newURL = "//" + longURL;
-    return newURL;
+    newUrl = "//" + longUrl;
+    return newUrl;
   } else {
-    return longURL;
+    return longUrl;
   }
 }
 //checkHTTP function was built and  help by Francis
@@ -80,6 +80,25 @@ const emailExist = email => {
     return false;
   }
 };
+function urlsForUser(id) {
+  const filteredUrls = {};
+  for (const shortUrl in urlDatabase) {
+    const urlObj = urlDatabase[shortUrl];
+    if (urlObj.userId === id) {
+      filteredUrls[shortUrl] = urlObj;
+    }
+  }
+  console.log("filtered URL: ", filteredUrls);
+  return filteredUrls;
+}
+
+function addNewUrl(shortUrl, longUrl, userId) {
+  urlDatabase[shortUrl] = {
+    shortUrl: shortUrl,
+    longUrl: longUrl,
+    userId: userId
+  };
+}
 
 // authentication function for log in usage not implemented
 // const authenticateUser = (email, password) => {
@@ -101,17 +120,11 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const randomId = generateRandomString();
+  let shortUrl = generateRandomString();
   let userId = req.cookies["userId"];
-  let currentUser = usersDb[userId];
-  let username = currentUser ? currentUser.email : undefined;
-  let url = "http://www." + req.body.longURL;
+  let longUrl = "http://www." + req.body.longUrl;
 
-  urlDatabase[randomId] = {
-    currentUser: currentUser,
-    url: url
-  };
-  console.log(url);
+  urlDatabase[shortUrl] = { longUrl, shortUrl, userId };
   res.redirect("/");
 });
 
@@ -162,7 +175,7 @@ app.get("/", (req, res) => {
   let currentUser = usersDb[userId];
   let username = currentUser ? currentUser.email : undefined;
   let templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(userId),
     currentUser: currentUser,
     username: username
   };
@@ -184,10 +197,10 @@ app.get("/urls", (req, res) => {
   let username = currentUser ? currentUser.email : undefined;
 
   let templateVars = {
-    urls: urlDatabase,
-    currentUser: currentUser,
-    username: currentUser.email
+    urls: urlsForUser(userId),
+    currentUser: currentUser
   };
+  console.log(urlDatabase);
 
   res.render("urls_index", templateVars);
 });
@@ -213,8 +226,8 @@ app.get("/urls/:id", (req, res) => {
   let currentUser = usersDb[userId];
   let username = currentUser ? currentUser.email : undefined;
   let templateVars = {
-    shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    shortUrl: req.params.id,
+    longUrl: urlDatabase[req.params.id],
     urls: urlDatabase,
     currentUser: currentUser,
     username: currentUser.email
@@ -223,9 +236,9 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-app.get("/u/:shortURL", (req, res) => {
+app.get("/u/:shortUrl", (req, res) => {
   let templateVars = { username: req.cookies };
-  res.redirect(longURL);
+  res.redirect(longUrl);
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -234,7 +247,7 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id/update", (req, res) => {
-  urlDatabase[req.params.id] = checHTTP(req.body.longURL);
+  urlDatabase[req.params.id].longUrl = checHTTP(req.body.longUrl);
   res.redirect("/urls");
 });
 

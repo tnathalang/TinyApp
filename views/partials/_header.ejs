@@ -3,15 +3,18 @@
 </header>
 
    
-    <% if(username !== undefined){ %>
-    <h3> Hello <%= username %></h3>
-    <h4><form method= "POST" action ="/logout?_method=DELETE">
+    <% if(currentUser !== undefined){ %>
+    <h3> Hello <%= currentUser.email %></h3>
+    <h4><form method="POST" action ="/logout?_method=DELETE">
     <input type="submit" value="LogOut">
     </form>
     </h4>
    <% } else{ %>  
-        <form method="POST" action="/login">
-        <input name="username">
+        <form method="GET" action="/register">
+            <button type="submit" value="Register">Register</button>
+        </form>
+        <form method="GET" action="/login">
+        
             <button type="submit" value="SignIn">Sign In</button>
     </form>
     <% } %>
