@@ -97,7 +97,7 @@ function urlsForUser(id) {
       filteredUrls[shortUrl] = urlObj;
     }
   }
-  console.log("filtered URL: ", filteredUrls);
+
   return filteredUrls;
 }
 
@@ -124,7 +124,6 @@ function addNewUrl(shortUrl, longUrl, userId) {
 //   return false;
 // };
 app.get("/login", (req, res) => {
-  let templateVars = { username: req.session.userId };
   res.render("login");
 });
 
@@ -204,7 +203,6 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   let userId = req.session.userId;
   let currentUser = usersDb[userId];
-  let username = currentUser ? currentUser.email : undefined;
 
   let templateVars = {
     urls: currentUser ? urlsForUser(userId) : urlDatabase,
@@ -233,7 +231,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   let userId = req.session.userId;
   let currentUser = usersDb[userId];
-  let username = currentUser ? currentUser.email : undefined;
+
   let templateVars = {
     shortUrl: req.params.id,
     longUrl: urlDatabase[req.params.id],
@@ -245,7 +243,6 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/u/:shortUrl", (req, res) => {
-  let templateVars = { username: req.cookies };
   res.redirect(longUrl);
 });
 
