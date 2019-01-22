@@ -5,12 +5,21 @@ const uuidv1 = require("uuid/v1");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const debug = require("debug")("app");
-var methodOverride = require("method-override");
+const methodOverride = require("method-override");
+const bcrypt = require("bcrypt");
+const cookieSession = require("cookie-session");
 
+app.set("trust proxy", 1);
 app.set("view engine", "ejs");
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["key1", "key2"]
+  })
+);
 
 const usersDb = {
   userRandomID: {
@@ -136,13 +145,15 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+  console.log("hashed password: ", hashedPassword);
   const email_password_empty = !email || !password;
   if (email_password_empty) {
     res.status(400).send("Please send out the required fields");
   } else if (emailExist(email)) {
     res.status(400).send("User already exists. Please login!");
   } else {
-    const userId = createUser(email, password);
+    const userId = createUser(email, hashedPassword);
 
     res.cookie("userId", userId);
     res.redirect("/urls");
@@ -197,10 +208,9 @@ app.get("/urls", (req, res) => {
   let username = currentUser ? currentUser.email : undefined;
 
   let templateVars = {
-    urls: urlsForUser(userId),
+    urls: currentUser ? urlsForUser(userId) : urlDatabase,
     currentUser: currentUser
   };
-  console.log(urlDatabase);
 
   res.render("urls_index", templateVars);
 });
@@ -232,7 +242,6 @@ app.get("/urls/:id", (req, res) => {
     currentUser: currentUser,
     username: currentUser.email
   };
-
   res.render("urls_show", templateVars);
 });
 

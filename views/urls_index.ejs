@@ -14,6 +14,7 @@
 
 
     <ul>
+      <% if (currentUser) { %>
       <% for (const urlKey in urls) { %>
       <li>
       <a><%= urlKey %></a> - 
@@ -26,6 +27,10 @@
         </form>
       </li>
       <% }; %>
+      <% } else{ %>
+      <h2>Please log in or register</h2>
+      
+      <% } %> 
     </ul>
     <a href = "/urls/new" > <h1>Create a new link</h1> </a>
   </body>
