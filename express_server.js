@@ -101,14 +101,6 @@ function urlsForUser(id) {
   return filteredUrls;
 }
 
-function addNewUrl(shortUrl, longUrl, userId) {
-  urlDatabase[shortUrl] = {
-    shortUrl: shortUrl,
-    longUrl: longUrl,
-    userId: userId
-  };
-}
-
 // authentication function for log in usage not implemented
 // const authenticateUser = (email, password) => {
 //   //loop over the userDb object
@@ -175,7 +167,7 @@ app.post("/login", (req, res) => {
 });
 
 app.delete("/logout", (req, res) => {
-  res.clearCookie("userId");
+  req.session = null;
   res.redirect("/login");
 });
 
