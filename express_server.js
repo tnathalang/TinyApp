@@ -124,13 +124,13 @@ function addNewUrl(shortUrl, longUrl, userId) {
 //   return false;
 // };
 app.get("/login", (req, res) => {
-  let templateVars = { username: req.cookies["userId"] };
+  let templateVars = { username: req.session.userId };
   res.render("login");
 });
 
 app.post("/urls", (req, res) => {
   let shortUrl = generateRandomString();
-  let userId = req.cookies["userId"];
+  let userId = req.session.userId;
   let longUrl = "http://www." + req.body.longUrl;
 
   urlDatabase[shortUrl] = { longUrl, shortUrl, userId };
@@ -138,7 +138,7 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  templateVars = { currentUser: null, username: req.cookies["username"] };
+  templateVars = { currentUser: null, username: req.session.username };
   res.render("register", templateVars);
 });
 
@@ -146,7 +146,6 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-  console.log("hashed password: ", hashedPassword);
   const email_password_empty = !email || !password;
   if (email_password_empty) {
     res.status(400).send("Please send out the required fields");
@@ -155,7 +154,7 @@ app.post("/register", (req, res) => {
   } else {
     const userId = createUser(email, hashedPassword);
 
-    res.cookie("userId", userId);
+    req.session.userId = userId;
     res.redirect("/urls");
   }
 });
@@ -166,7 +165,7 @@ app.post("/login", (req, res) => {
       usersDb[userId].email === req.body.email &&
       usersDb[userId].password === req.body.password
     ) {
-      res.cookie("userId", usersDb[userId].id);
+      req.session.userId = usersDb[userId].id;
       res.redirect("/urls");
       return;
     }
@@ -182,7 +181,7 @@ app.delete("/logout", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  let userId = req.cookies["userId"];
+  let userId = req.session.userId;
   let currentUser = usersDb[userId];
   let username = currentUser ? currentUser.email : undefined;
   let templateVars = {
@@ -203,7 +202,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  let userId = req.cookies["userId"];
+  let userId = req.session.userId;
   let currentUser = usersDb[userId];
   let username = currentUser ? currentUser.email : undefined;
 
@@ -216,7 +215,7 @@ app.get("/urls", (req, res) => {
 });
 ``;
 app.get("/urls/new", (req, res) => {
-  let userId = req.cookies["userId"];
+  let userId = req.session.userId;
   let currentUser = usersDb[userId];
   let username = currentUser ? currentUser.email : undefined;
   let templateVars = {
@@ -232,7 +231,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  let userId = req.cookies["userId"];
+  let userId = req.session.userId;
   let currentUser = usersDb[userId];
   let username = currentUser ? currentUser.email : undefined;
   let templateVars = {
