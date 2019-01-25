@@ -21,5 +21,5 @@ This is a barebone project with the functionalities but _without in line styling
 
 ## Getting started
 
-- Install all dependencies (using the 'npm install' command for all except for possibly the bcrypt)
+- Install all dependencies, please use yarn instead of npm install!
 - Run the development web server using the 'node express_server.js' command.
