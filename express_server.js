@@ -154,7 +154,7 @@ app.post("/login", (req, res) => {
   for (let userId in usersDb) {
     if (
       usersDb[userId].email === req.body.email &&
-      usersDb[userId].password === req.body.password
+      bcrypt.compareSync(req.body.password, usersDb[userId].password)
     ) {
       req.session.userId = usersDb[userId].id;
       res.redirect("/urls");
