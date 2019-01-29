@@ -21,5 +21,6 @@ This is a barebone project with the functionalities but _without in line styling
 
 ## Getting started
 
-- Install all dependencies, please use yarn instead of npm install!
+- run npm install yarn //some dependencies cannot be installed with npm
+- run yarn install //to install all the proper dependencies
 - Run the development web server using the 'node express_server.js' command.
