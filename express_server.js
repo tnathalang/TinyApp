@@ -3,15 +3,12 @@ const app = express();
 const PORT = 8080; // default port 8080
 const uuidv1 = require("uuid/v1");
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
-const debug = require("debug")("app");
 const methodOverride = require("method-override");
 const bcrypt = require("bcrypt");
 const cookieSession = require("cookie-session");
 
 app.set("trust proxy", 1);
 app.set("view engine", "ejs");
-app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(
@@ -44,25 +41,16 @@ const urlDatabase = {
 
 function generateRandomString() {
   const id = uuidv1().substring(0, 6);
-  // const alphanumeric =
-  //   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456759";
-  // let result = [];
-  // for (let i = 0; i < 6; i++) {
-  //   result.push(alphanumeric[Math.floor(Math.random() * alphanumeric.length)]);
-  // }
-
-  // return result.join("");
-
   return id;
 }
 
-function checHTTP(longUrl) {
+function checkHTTP(longUrl) {
   // a function to check if a version puts http or https inside the update longUrl
-  let start1 = longUrl.slice(0, 7);
-  let start2 = longUrl.slice(0, 8);
+  let http = longUrl.slice(0, 7);
+  let https = longUrl.slice(0, 8);
 
-  if (start1 !== "http://" && start2 !== "https://") {
-    newUrl = "//" + longUrl;
+  if (http !== "http://" && https !== "https://") {
+    newUrl = "http://" + longUrl;
     return newUrl;
   } else {
     return longUrl;
@@ -101,74 +89,13 @@ function urlsForUser(id) {
   return filteredUrls;
 }
 
-// authentication function for log in usage not implemented
-// const authenticateUser = (email, password) => {
-//   //loop over the userDb object
-//   // if the emails and passwords match, return the userId
-//   // if not match is found, return false
-
-//   for (const userId in usersDb) {
-//     const user = usersDb[userId];
-//     if (user.email === email && user.password === password) {
-//       return user.id;
-//     }
-//   }
-//   return false;
-// };
 app.get("/login", (req, res) => {
   res.render("login");
-});
-
-app.post("/urls", (req, res) => {
-  let shortUrl = generateRandomString();
-  let userId = req.session.userId;
-  let longUrl = "http://www." + req.body.longUrl;
-
-  urlDatabase[shortUrl] = { longUrl, shortUrl, userId };
-  res.redirect("/");
 });
 
 app.get("/register", (req, res) => {
   templateVars = { currentUser: null, username: req.session.username };
   res.render("register", templateVars);
-});
-
-app.post("/register", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-  const email_password_empty = !email || !password;
-  if (email_password_empty) {
-    res.status(400).send("Please send out the required fields");
-  } else if (emailExist(email)) {
-    res.status(400).send("User already exists. Please login!");
-  } else {
-    const userId = createUser(email, hashedPassword);
-
-    req.session.userId = userId;
-    res.redirect("/urls");
-  }
-});
-
-app.post("/login", (req, res) => {
-  for (let userId in usersDb) {
-    if (
-      usersDb[userId].email === req.body.email &&
-      bcrypt.compareSync(req.body.password, usersDb[userId].password)
-    ) {
-      req.session.userId = usersDb[userId].id;
-      res.redirect("/urls");
-      return;
-    }
-  }
-  res.send(
-    "User is not found or incorrect password, please register or check if you input your password correctly"
-  );
-});
-
-app.delete("/logout", (req, res) => {
-  req.session = null;
-  res.redirect("/login");
 });
 
 app.get("/", (req, res) => {
@@ -221,8 +148,16 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  if (!("userId" in req.session)) {
+    return res.redirect("/");
+  }
+
   let userId = req.session.userId;
   let currentUser = usersDb[userId];
+
+  if (urlDatabase[req.params.id].userId !== currentUser.id) {
+    return res.redirect("/urls");
+  }
 
   let templateVars = {
     shortUrl: req.params.id,
@@ -235,7 +170,50 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/u/:shortUrl", (req, res) => {
+  let longUrl = urlDatabase[req.params.shortUrl].longUrl;
   res.redirect(longUrl);
+});
+
+app.post("/urls", (req, res) => {
+  let shortUrl = generateRandomString();
+  let userId = req.session.userId;
+  let longUrl = checkHTTP(req.body.longUrl);
+
+  urlDatabase[shortUrl] = { longUrl, shortUrl, userId };
+  res.redirect("/");
+});
+
+app.post("/register", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+  const email_password_empty = !email || !password;
+  if (email_password_empty) {
+    res.status(400).send("Please send out the required fields");
+  } else if (emailExist(email)) {
+    res.status(400).send("User already exists. Please login!");
+  } else {
+    const userId = createUser(email, hashedPassword);
+
+    req.session.userId = userId;
+    res.redirect("/urls");
+  }
+});
+
+app.post("/login", (req, res) => {
+  for (let userId in usersDb) {
+    if (
+      usersDb[userId].email === req.body.email &&
+      bcrypt.compareSync(req.body.password, usersDb[userId].password)
+    ) {
+      req.session.userId = usersDb[userId].id;
+      res.redirect("/urls");
+      return;
+    }
+  }
+  res.send(
+    "User is not found or incorrect password, please register or check if you input your password correctly"
+  );
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -244,8 +222,13 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id/update", (req, res) => {
-  urlDatabase[req.params.id].longUrl = checHTTP(req.body.longUrl);
+  urlDatabase[req.params.id].longUrl = checkHTTP(req.body.longUrl);
   res.redirect("/urls");
+});
+
+app.delete("/logout", (req, res) => {
+  req.session = null;
+  res.redirect("/login");
 });
 
 app.listen(PORT, () => {
