@@ -58,7 +58,7 @@ function checkHTTP(longUrl) {
 }
 //checkHTTP function was built and  help by Francis
 
-const createUser = (email, password) => {
+const createUser = function(email, password) {
   const userId = generateRandomString();
   const newUser = {
     id: userId,
@@ -69,7 +69,7 @@ const createUser = (email, password) => {
   return userId;
 };
 
-const emailExist = email => {
+const emailExist = function(email) {
   for (const userId in usersDb) {
     if (usersDb[userId].email === email) {
       return userId;
@@ -77,6 +77,7 @@ const emailExist = email => {
     return false;
   }
 };
+
 function urlsForUser(id) {
   const filteredUrls = {};
   for (const shortUrl in urlDatabase) {
